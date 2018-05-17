@@ -1,0 +1,296 @@
+修改hostname 
+hostnamectl set-hostname master
+
+vim /etc/hosts
+172.16.11.51 master
+172.16.11.52 slave1
+172.16.11.53 slave2
+172.16.11.54 slave3
+172.16.11.55 slave4
+
+
+scp scala-2.12.6.tgz slave1:/home/software/
+
+tar -zxvf scala-2.12.6.tgz
+mv scala-2.12.6 /usr/local/
+
+export SCALA_HOME=/usr/local/scala-2.12.6/
+export PATH=${SCALA_HOME}/bin:$PATH
+
+tar -zxvf zookeeper-3.4.12.tar.gz
+mv zookeeper-3.4.12 /usr/local/
+cd /usr/local/zookeeper-3.4.12/conf/
+
+mkdir -p /home/data/zookeeper/data
+mkdir -p /home/data/zookeeper/logs
+
+cp zoo_sample.cfg zoo.cfg
+vim zoo.cfg
+
+echo '1' > /home/data/zookeeper/data/myid
+
+scp -r /usr/local/zookeeper-3.4.12/ slave1:/usr/local/zookeeper-3.4.12/
+
+/usr/local/zookeeper-3.4.12/bin/zkServer.sh start
+/usr/local/zookeeper-3.4.12/bin/zkServer.sh status
+
+
+cd /home/software/
+ tar -zxvf hadoop-2.7.6.tar.gz
+ mv hadoop-2.7.6 /usr/local/
+ cd /usr/local/hadoop-2.7.6/etc/hadoop
+ cp mapred-site.xml.template mapred-site.xml
+
+
+ mkdir -p /home/data/jn/data
+ mkdir -p /home/data/hadoop/tmp
+ mkdir -p /home/data/hadoop/dfs/data
+ mkdir -p /home/data/hadoop/dfs/name
+ 
+ 
+export HADOOP_HOME=/usr/local/hadoop-2.7.6
+export PATH=${HADOOP_HOME}/bin:$PATH
+
+export HADOOP_PREFIX=/usr/local/hadoop-2.7.6
+export PATH=$PATH:$HADOOP_PREFIX/bin
+export PATH=$PATH:$HADOOP_PREFIX/sbin
+export HADOOP_MAPRED_HOME=${HADOOP_PREFIX}
+export HADOOP_COMMON_HOME=${HADOOP_PREFIX}
+export HADOOP_HDFS_HOME=${HADOOP_PREFIX}
+export YARN_HOME=${HADOOP_PREFIX}
+export HADOOP_CONF_DIR=${HADOOP_PREFIX}/etc/hadoop
+export YARN_CONF_DIR=${HADOOP_PREFIX}/etc/hadoop
+
+
+yarn-site.xml最后加上
+		<property>
+				<name>yarn.nodemanager.pmem-check-enabled</name>
+				<value>false</value>
+		</property>
+
+		<property>
+				<name>yarn.nodemanager.vmem-check-enabled</name>
+				<value>false</value>
+		</property>
+
+cd /usr/local/
+rsync -r /usr/local/hadoop-2.7.6/ slave1:/usr/local/hadoop-2.7.6/
+
+--master上
+hdfs zkfc –formatZK
+
+--分别在 master、slave1、slave2 上执行以下命令
+hadoop-daemon.sh start journalnode
+
+--master上
+hdfs namenode -format
+hadoop-daemon.sh start namenode
+
+--slave1上
+hdfs namenode -bootstrapStandby
+hadoop-daemon.sh start namenode
+
+--master上
+hadoop-daemons.sh start datanode
+start-yarn.sh
+
+--slave1上
+yarn-daemon.sh start resourcemanager
+
+--master和slave1上
+hadoop-daemon.sh start zkfc
+mr-jobhistory-daemon.sh   start historyserver
+
+http://172.16.11.51:50070/dfshealth.html#tab-overview
+http://172.16.11.51:50070/dfshealth.html#tab-overview
+http://172.16.11.51:8088/cluster/cluster
+http://172.16.11.52:8088/cluster/cluster
+
+
+tar -zxvf spark-2.2.0-bin-hadoop2.7.tgz
+#重命名为spark-2.2.0，mv到/usr/local/目录
+ mv spark-2.2.0-bin-hadoop2.7 /usr/local/spark-2.2.0
+ 
+ cp spark-env.sh.template spark-env.sh
+ cp slaves.template slaves
+ 
+ 
+ export SPARK_HOME=/usr/local/spark-2.2.0
+ 
+ cd /usr/local/spark-2.2.0/sbin
+
+ scp -r /usr/local/spark-2.2.0/ slave1:/usr/local/spark-2.2.0/
+ 
+ --master上
+ cd /usr/local/spark-2.2.0/sbin
+./start-master.sh
+./start-slaves.sh
+
+http://172.16.11.51:8080/
+
+
+tar -zxvf hbase-1.3.1-bin.tar.gz
+mv hbase-1.3.1 /usr/local/
+
+export HBASE_HOME=/usr/local/hbase-1.3.1
+export PATH=$HBASE_HOME/bin:$PATH
+
+rsync -av /usr/local/hbase-1.3.1/ slave1:/usr/local/hbase-1.3.1/
+
+--master上
+cd /usr/local/hbase-1.3.1/bin/
+ ./start-hbase.sh
+ 
+ http://172.16.11.51:16010/master-status
+ 
+ --slave1上
+ hbase-daemon.sh start master
+ http://172.16.11.52:16010/master-status
+ 
+ 
+cd /home/software/ 
+tar -zxvf kafka_2.12-1.0.0.tgz 
+mv kafka_2.12-1.0.0 /usr/local/
+cd /usr/local/kafka_2.12-1.0.0/
+
+
+export KAFKA_HOME=/usr/local/kafka_2.12-1.0.0
+export PATH=$KAFKA_HOME/bin:$PATH
+
+
+rsync -av /usr/local/kafka_2.12-1.0.0/ slave1:/usr/local/kafka_2.12-1.0.0/
+
+vim /usr/local/kafka_2.12-1.0.0/config/server.properties
+
+/usr/local/kafka_2.12-1.0.0
+/usr/local/kafka_2.12-1.0.0/bin/kafka-server-start.sh /usr/local/kafka_2.12-1.0.0/config/server.properties & 
+
+满意的命令：sh kafka-server-start.sh ../config/server.properties 1>/dev/null  2>&1  &
+
+其中1>/dev/null  2>&1 是将命令产生的输入和错误都输入到空设备，也就是不输出的意思。
+
+/dev/null代表空设备。
+
+cd /usr/local/kafka_2.12-1.0.0/bin
+sh kafka-server-start.sh ../config/server.properties 1>/dev/null  2>&1  &
+
+
+
+--zeppelin安装
+cd /home/software/ 
+tar -zxvf zeppelin-0.7.3-bin-all.tgz
+mv zeppelin-0.7.3-bin-all /usr/local/zeppelin-0.7.3
+
+export ZEPPELIN_HOME=/data/zeppelin-0.7.3  
+export PATH=$ZEPPELIN_HOME/bin:$PATH 
+
+
+配置文件
+cd /usr/local/zeppelin-0.7.3/
+
+cp conf/zeppelin-env.sh.template conf/zeppelin-env.sh
+cp conf/zeppelin-site.xml.template conf/zeppelin-site.xml
+修改zeppelin-site.xml里8080端口为18081
+启动
+cd /usr/local/zeppelin-0.7.3/
+./bin/zeppelin-daemon.sh start 
+WEBUI
+http://172.16.11.51:18081/
+
+
+tar -xvf apache-maven-3.5.3-bin.tar.gz
+mv apache-maven-3.5.3 /usr/local/apache-maven
+
+export MAVEN_HOME=/usr/local/apache-maven
+export PATH=$JAVA_HOME/bin:$JAVA_HOME/jre/bin:$MAVEN_HOME/bin:$PATH
+
+
+yum install -y git
+git clone https://github.com/apache/zeppelin.git
+./dev/change_scala_version.sh 2.12
+mvn clean package -DskipTests -Pspark-2.2 -Phadoop-2.7 -Pyarn -Ppyspark -Psparkr -Pr -Pscala-2.11
+
+hdfs dfs -mkdir /maitian
+hdfs dfs -put /data/HouseSecond  /maitian/
+
+cd /usr/local/spark-2.2.0/
+bin/spark-submit --master spark://172.16.11.51:7077 --class cn.maitian.spark.housesecond.HouseSecondCount --executor-memory 1024m /data/housesecond-1.0-SNAPSHOT.jar
+
+bin/spark-submit --class cn.maitian.spark.housesecond.HouseSecondCount \
+	--master yarn-client  \
+	--num-executors 5 \
+	--driver-memory 2g \
+	--executor-memory 3g \
+	--executor-cores 5 \
+	/data/housesecond-1.0-SNAPSHOT.jar \
+	100000
+ 
+ 
+  scp  /usr/local/hadoop-2.7.6/etc/hadoop/yarn-site.xml slave1:/usr/local/hadoop-2.7.6/etc/hadoop
+  
+  
+cd /usr/local/zeppelin-0.7.3/lib  
+rm -f jackson-annotations-2.5.0.jar  
+rm -f jackson-core-2.5.3.jar  
+rm -f jackson-databind-2.5.3.jar  
+ 
+cp /usr/local/spark-2.2.0/jars/jackson-databind-2.6.5.jar /usr/local/zeppelin-0.7.3/lib/  
+cp /usr/local/spark-2.2.0/jars/jackson-core-2.6.5.jar /usr/local/zeppelin-0.7.3/lib/  
+cp /usr/local/spark-2.2.0/jars/jackson-annotations-2.6.5.jar /usr/local/zeppelin-0.7.3/lib/  
+
+
+cd /usr/local/zeppelin-0.7.3/lib 
+rm hadoop-annotations-2.6.0.jar 
+rm hadoop-auth-2.6.0.jar 
+rm hadoop-common-2.6.0.jar 
+
+
+cp /usr/local/spark-2.2.0/jars/hadoop-annotations-2.7.3.jar /usr/local/zeppelin-0.7.3/lib/ 
+cp /usr/local/spark-2.2.0/jars/hadoop-auth-2.7.3.jar /usr/local/zeppelin-0.7.3/lib/
+cp /usr/local/spark-2.2.0/jars/hadoop-common-2.7.3.jar /usr/local/zeppelin-0.7.3/lib/
+
+--redis 安装
+yum install gcc
+yum install psmisc
+
+cd /home/software/
+wget http://download.redis.io/releases/redis-4.0.9.tar.gz
+tar xzf redis-4.0.9.tar.gz
+mv redis-4.0.9 /usr/local/redis
+cd /usr/local/redis
+//make MALLOC=libc
+//make & make install
+make
+
+make时可能会报如下错误：
+cc: error: ../deps/hiredis/libhiredis.a: No such file or directory
+
+
+cc: error: ../deps/lua/src/liblua.a: No such file or directory
+
+
+cc: error: ../deps/jemalloc/lib/libjemalloc.a: No such file or directory
+
+
+make: *** [redis-server] Error 1
+
+
+
+
+分别进入redis下的deps下的hiredis、lua 运行make
+注意：jemalloc下可能要先运行./configure，然后make
+回到src目录运行 make  
+
+结果还是报cc: error: ../deps/lua/src/liblua.a: No such file or directory
+
+
+这下子我把redis的解压包 删除掉 rm -rf redis-stable 
+重新解压  进入redis-stable  make  还真没报错了。
+
+cd /usr/local/redis
+src/redis-server redis.conf &
+
+cd /usr/local/redis/
+src/redis-cli
+
+src/redis-server redis.conf
