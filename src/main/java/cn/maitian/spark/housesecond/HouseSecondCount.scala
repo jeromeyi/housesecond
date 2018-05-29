@@ -22,7 +22,7 @@ object HouseSecondCount {
     /*val houseseconddata = sc.sequenceFile[UserID, UserInfo]("hdfs://master:9000/maitian/HouseSecond/HouseSecond*")
       .partitionBy(new HashPartitioner(100)) // 构造100个分区
       .persist()*/
-    val houseseconddata = spark.read.textFile("/maitian/HouseSecond/HouseSecond*")
+    val houseseconddata = spark.read.textFile("/maitian/HouseSecond/*")
     val housesecond = houseseconddata.rdd.map (
       line =>  line.split(",")).filter(_.length>20).map(data=>
       houseSecond(data(0),data(1),data(2).replaceAll("\"", ""),data(15)) )
