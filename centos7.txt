@@ -114,13 +114,15 @@ tar -zxvf spark-2.2.0-bin-hadoop2.7.tgz
  cp spark-env.sh.template spark-env.sh
  cp slaves.template slaves
  
- 
+ cp spark-defaults.conf.template spark-defaults.conf
+
+
  export SPARK_HOME=/usr/local/spark-2.2.0
- 
+
  cd /usr/local/spark-2.2.0/sbin
 
  scp -r /usr/local/spark-2.2.0/ slave1:/usr/local/spark-2.2.0/
- 
+
  --master上
  cd /usr/local/spark-2.2.0/sbin
 ./start-master.sh
@@ -140,16 +142,16 @@ rsync -av /usr/local/hbase-1.3.1/ slave1:/usr/local/hbase-1.3.1/
 --master上
 cd /usr/local/hbase-1.3.1/bin/
  ./start-hbase.sh
- 
+
  http://172.16.11.51:16010/master-status
- 
+
  --slave1上
  hbase-daemon.sh start master
  http://172.16.11.52:16010/master-status
- 
- 
-cd /home/software/ 
-tar -zxvf kafka_2.12-1.0.0.tgz 
+
+
+cd /home/software/
+tar -zxvf kafka_2.12-1.0.0.tgz
 mv kafka_2.12-1.0.0 /usr/local/
 cd /usr/local/kafka_2.12-1.0.0/
 
@@ -163,7 +165,7 @@ rsync -av /usr/local/kafka_2.12-1.0.0/ slave1:/usr/local/kafka_2.12-1.0.0/
 vim /usr/local/kafka_2.12-1.0.0/config/server.properties
 
 /usr/local/kafka_2.12-1.0.0
-/usr/local/kafka_2.12-1.0.0/bin/kafka-server-start.sh /usr/local/kafka_2.12-1.0.0/config/server.properties & 
+/usr/local/kafka_2.12-1.0.0/bin/kafka-server-start.sh /usr/local/kafka_2.12-1.0.0/config/server.properties &
 
 满意的命令：sh kafka-server-start.sh ../config/server.properties 1>/dev/null  2>&1  &
 
@@ -172,18 +174,17 @@ vim /usr/local/kafka_2.12-1.0.0/config/server.properties
 /dev/null代表空设备。
 
 cd /usr/local/kafka_2.12-1.0.0/bin
-cd /usr/local/kafka_2.12-1.0.0/bin
+sh kafka-server-start.sh ../config/server.properties 1>/dev/null  2>&1  &
 sh kafka-server-start.sh -daemon ../config/server.properties 1>/dev/null  2>&1  &
-
-
+sh kafka-server-start.sh -daemon ../config/server.properties
 
 --zeppelin安装
-cd /home/software/ 
+cd /home/software/
 tar -zxvf zeppelin-0.7.3-bin-all.tgz
 mv zeppelin-0.7.3-bin-all /usr/local/zeppelin-0.7.3
 
-export ZEPPELIN_HOME=/data/zeppelin-0.7.3  
-export PATH=$ZEPPELIN_HOME/bin:$PATH 
+export ZEPPELIN_HOME=/data/zeppelin-0.7.3
+export PATH=$ZEPPELIN_HOME/bin:$PATH
 
 
 配置文件
@@ -194,7 +195,7 @@ cp conf/zeppelin-site.xml.template conf/zeppelin-site.xml
 修改zeppelin-site.xml里8080端口为18081
 启动
 cd /usr/local/zeppelin-0.7.3/
-./bin/zeppelin-daemon.sh start 
+./bin/zeppelin-daemon.sh start
 WEBUI
 http://172.16.11.51:18081/
 
@@ -214,6 +215,15 @@ mvn clean package -DskipTests -Pspark-2.2 -Phadoop-2.7 -Pyarn -Ppyspark -Psparkr
 hdfs dfs -mkdir /maitian
 hdfs dfs -put /data/HouseSecond  /maitian/
 
+du -s -h /data/HouseSecond/
+hadoop dfs -du -s -h /maitian/HouseSecond
+
+ hdfs dfs -mkdir /sparkEventLogs
+ --启动历史任务UI监控
+ cd /usr/local/spark-2.2.0/sbin/
+./start-history-server.sh
+http://master:18080
+
 cd /usr/local/spark-2.2.0/
 bin/spark-submit --master spark://172.16.11.51:7077 --class cn.maitian.spark.housesecond.HouseSecondCount --executor-memory 1024m /data/housesecond-1.0-SNAPSHOT.jar
 
@@ -225,28 +235,28 @@ bin/spark-submit --class cn.maitian.spark.housesecond.HouseSecondCount \
 	--executor-cores 5 \
 	/data/housesecond-1.0-SNAPSHOT.jar \
 	100000
- 
- 
+
+
   scp  /usr/local/hadoop-2.7.6/etc/hadoop/yarn-site.xml slave1:/usr/local/hadoop-2.7.6/etc/hadoop
-  
-  
-cd /usr/local/zeppelin-0.7.3/lib  
-rm -f jackson-annotations-2.5.0.jar  
-rm -f jackson-core-2.5.3.jar  
-rm -f jackson-databind-2.5.3.jar  
- 
-cp /usr/local/spark-2.2.0/jars/jackson-databind-2.6.5.jar /usr/local/zeppelin-0.7.3/lib/  
-cp /usr/local/spark-2.2.0/jars/jackson-core-2.6.5.jar /usr/local/zeppelin-0.7.3/lib/  
-cp /usr/local/spark-2.2.0/jars/jackson-annotations-2.6.5.jar /usr/local/zeppelin-0.7.3/lib/  
 
 
-cd /usr/local/zeppelin-0.7.3/lib 
-rm hadoop-annotations-2.6.0.jar 
-rm hadoop-auth-2.6.0.jar 
-rm hadoop-common-2.6.0.jar 
+cd /usr/local/zeppelin-0.7.3/lib
+rm -f jackson-annotations-2.5.0.jar
+rm -f jackson-core-2.5.3.jar
+rm -f jackson-databind-2.5.3.jar
+
+cp /usr/local/spark-2.2.0/jars/jackson-databind-2.6.5.jar /usr/local/zeppelin-0.7.3/lib/
+cp /usr/local/spark-2.2.0/jars/jackson-core-2.6.5.jar /usr/local/zeppelin-0.7.3/lib/
+cp /usr/local/spark-2.2.0/jars/jackson-annotations-2.6.5.jar /usr/local/zeppelin-0.7.3/lib/
 
 
-cp /usr/local/spark-2.2.0/jars/hadoop-annotations-2.7.3.jar /usr/local/zeppelin-0.7.3/lib/ 
+cd /usr/local/zeppelin-0.7.3/lib
+rm hadoop-annotations-2.6.0.jar
+rm hadoop-auth-2.6.0.jar
+rm hadoop-common-2.6.0.jar
+
+
+cp /usr/local/spark-2.2.0/jars/hadoop-annotations-2.7.3.jar /usr/local/zeppelin-0.7.3/lib/
 cp /usr/local/spark-2.2.0/jars/hadoop-auth-2.7.3.jar /usr/local/zeppelin-0.7.3/lib/
 cp /usr/local/spark-2.2.0/jars/hadoop-common-2.7.3.jar /usr/local/zeppelin-0.7.3/lib/
 
@@ -280,12 +290,12 @@ make: *** [redis-server] Error 1
 
 分别进入redis下的deps下的hiredis、lua 运行make
 注意：jemalloc下可能要先运行./configure，然后make
-回到src目录运行 make  
+回到src目录运行 make
 
 结果还是报cc: error: ../deps/lua/src/liblua.a: No such file or directory
 
 
-这下子我把redis的解压包 删除掉 rm -rf redis-stable 
+这下子我把redis的解压包 删除掉 rm -rf redis-stable
 重新解压  进入redis-stable  make  还真没报错了。
 
 cd /usr/local/redis
@@ -295,3 +305,38 @@ cd /usr/local/redis/
 src/redis-cli
 
 src/redis-server redis.conf
+
+21.1	先给权限chmod +x /etc/rc.d/rc.local，才会开机自启
+21.2	master1的 vim /etc/rc.local
+
+./etc/profile
+/usr/local/zookeeper-3.4.12/bin/zkServer.sh start  >/dev/null 2>&1
+#仅master运行即可
+/usr/local/hadoop-2.7.6/sbin/start-all.sh > /dev/null 2>&1
+/usr/local/hadoop-2.7.6/sbin/mr-jobhistory-daemon.sh start historyserver > /dev/null 2>&1
+#spark
+/usr/local/spark-2.2.0/sbin/start-master.sh > /dev/null 2>&1
+/usr/local/spark-2.2.0/sbin/start-slaves.sh > /dev/null 2>&1
+#hbase
+/usr/local/hbase-1.3.1/bin/start-hbase.sh > /dev/null 2>&1
+#kafka每台节点都要运行
+/usr/local/kafka_2.12-1.0.0/bin/kafka-server-start.sh /usr/local/kafka_2.12-1.0.0/config/server.properties & > /dev/null 2>&1
+
+
+21.3	slave1的/etc/rc.local
+./etc/profile
+/usr/local/zookeeper-3.4.12/bin/zkServer.sh start  >/dev/null 2>&1
+/usr/local/hadoop-2.7.6/sbin/mr-jobhistory-daemon.sh start historyserver > /dev/null 2>&1
+#hbase 备份的
+/usr/local/hbase-1.3.1/bin/start-hbase.sh > /dev/null 2>&1
+#kafka
+/usr/local/kafka_2.12-1.0.0/bin/kafka-server-start.sh /usr/local/kafka_2.12-1.0.0/config/server.properties & > /dev/null 2>&1
+
+
+21.4	slave2的/etc/rc.local
+
+./etc/profile
+/usr/local/zookeeper-3.4.12/bin/zkServer.sh start  >/dev/null 2>&1
+#kafka
+/usr/local/kafka_2.12-1.0.0/bin/kafka-server-start.sh /usr/local/kafka_2.12-1.0.0/config/server.properties & > /dev/null 2>&1
+
