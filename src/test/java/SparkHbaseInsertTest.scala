@@ -18,14 +18,14 @@ object SparkHbaseInsertTest {
     val sparkContext = new SparkContext(sconf)
     val conf = HBaseConfiguration.create()
     var jobConf = new JobConf(conf)
-    jobConf.set("hbase.zookeeper.quorum", "localhost")
-    jobConf.set("zookeeper.znode.parent", "/hbase")
+    jobConf.set("hbase.zookeeper.quorum", "master,slave1,slave2,slave3,slave4")
+    //jobConf.set("zookeeper.znode.parent", "/hbase")
     jobConf.set(TableOutputFormat.OUTPUT_TABLE, "test")
     jobConf.setOutputFormat(classOf[TableOutputFormat])
     val rdd = sparkContext.makeRDD(Array(1)).flatMap(_ => 0 to 100000)
     rdd.map(x => {
       var put = new Put(Bytes.toBytes(x.toString))
-      put.addColumn(Bytes.toBytes("f1"), Bytes.toBytes("c1"), Bytes.toBytes(x.toString))
+      put.addColumn(Bytes.toBytes("cf"), Bytes.toBytes("c1"), Bytes.toBytes(x.toString))
       (new ImmutableBytesWritable, put)
     }).saveAsHadoopDataset(jobConf)
   }

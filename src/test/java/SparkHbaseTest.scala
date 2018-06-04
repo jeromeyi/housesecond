@@ -22,7 +22,7 @@ object SparkHbaseTest {
 
     val conf = HBaseConfiguration.create()
 
-    conf.set("hbase.zookeeper.quorum","hadoop01")
+    conf.set("hbase.zookeeper.quorum","master,slave1,slave2,slave3,slave4")
 
     conf.set("hbase.zookeeper.property.clientPort", "2181")
 
@@ -48,14 +48,14 @@ object SparkHbaseTest {
 
     val count = hBaseRDD.count()
     val datas = hBaseRDD.map( x=>x._2).map{
-      result => (result.getRow,result.getValue(Bytes.toBytes("f1"),Bytes.toBytes("c1")))
+      result => (result.getRow,result.getValue(Bytes.toBytes("cf"),Bytes.toBytes("c1")))
     }.map(row => (new String(row._1),new String(row._2)))
       .collect.foreach(r => (println(r._1+":"+r._2)))
     hBaseRDD.foreach{case (_,result) =>{
 
       val rowKey = Bytes.toString(result.getRow)
 
-      val value= Bytes.toString(result.getValue("f1".getBytes,"c1".getBytes))
+      val value= Bytes.toString(result.getValue("cf".getBytes,"c1".getBytes))
 
       println("rowKey:"+rowKey+" Value:"+value)
 
