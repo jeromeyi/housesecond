@@ -172,7 +172,8 @@ vim /usr/local/kafka_2.12-1.0.0/config/server.properties
 /dev/null代表空设备。
 
 cd /usr/local/kafka_2.12-1.0.0/bin
-sh kafka-server-start.sh ../config/server.properties 1>/dev/null  2>&1  &
+cd /usr/local/kafka_2.12-1.0.0/bin
+sh kafka-server-start.sh -daemon ../config/server.properties 1>/dev/null  2>&1  &
 
 
 
