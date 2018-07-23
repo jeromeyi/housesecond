@@ -17,7 +17,7 @@ object DoubanRecommender {
     val sc = new SparkContext(new SparkConf().setMaster(masterUrl).setAppName("DoubanRecommender"))
     //val base = "/opt/douban/"
     //val base = if (args.length > 0) args(0) else "/opt/douban/"
-    val base = if (args.length > 0) args(0) else "D://scalaworkspace//spark//doubandata//"
+    val base = if (args.length > 0) args(0) else "file:///D://scalaworkspace//spark//doubandata//"
 
     /* val sc = new SparkContext(new SparkConf().setAppName("DoubanRecommender"))
      //val base = "/opt/douban/"
