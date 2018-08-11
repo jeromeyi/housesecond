@@ -1,5 +1,5 @@
-import org.apache.hadoop.hbase.{HBaseConfiguration, HTableDescriptor, TableName}
-import org.apache.hadoop.hbase.client.{ConnectionFactory, HBaseAdmin, HTable, Put}
+import org.apache.hadoop.hbase._
+import org.apache.hadoop.hbase.client._
 import org.apache.hadoop.hbase.mapreduce.TableInputFormat
 import org.apache.spark._
 import org.apache.hadoop.hbase.util.Bytes
@@ -7,8 +7,11 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.TableOutputFormat
 import org.apache.hadoop.mapred.JobConf
 import org.apache.hadoop.io._
+import org.hhl.hbase.HbaseHelper
 
+import scala.collection.mutable.ListBuffer
 object SparkHbaseTest {
+  var nameSpace = "default"
   case class MD( key:String,value:String)
   def main(args: Array[String]): Unit = {
     System.setProperty("hadoop.home.dir", "D:\\hadoop\\hadoop-common-2.2.0-bin-master")
@@ -30,15 +33,42 @@ object SparkHbaseTest {
 
     //val admin = new HBaseAdmin(conf)
     val connection = ConnectionFactory.createConnection(conf)
+    //deleteHTable(connection,tablename)
+    //return ;
     val admin =connection.getAdmin().asInstanceOf[HBaseAdmin]
 
     if (!admin.isTableAvailable(tablename)) {
 
-      val tableDesc = new HTableDescriptor(TableName.valueOf(tablename))
+      //val tableDesc = new HTableDescriptor(TableName.valueOf(tablename))
 
-      admin.createTable(tableDesc)
+      //admin.createTable(tableDesc)
+      val columnFamily = Seq("cf")
+
+
+      new HbaseHelper().createHTable(connection,"test",10,columnFamily.toArray)
 
     }
+    val  table = connection.getTable(TableName.valueOf("test"))
+    val get = new Get(Bytes.toBytes("fb038c3e_35989"))
+    val result: Result  = table.get(get)
+   /* val cells=result.rawCells()
+    val c1IdsList = new ListBuffer[String]();
+    for(cell <- cells){
+      val family = Bytes.toString(CellUtil.cloneFamily(cell));
+      println("family---"+family)
+      if("cf".equals(family)) {
+        val c1 = Bytes.toString(CellUtil.cloneQualifier(cell));
+        c1IdsList+=c1;
+       // println(c1.getBytes)
+      }
+    //System.out.println(" 列：" + new String(CellUtil.cloneFamily(keyValue))+":"+new String(CellUtil.cloneQualifier(keyValue)) + "     值:" + new String(CellUtil.cloneValue(keyValue)));
+  }
+  */
+      println(Bytes.toString(result.getValue(Bytes.toBytes("cf"),Bytes.toBytes("c1"))))
+
+
+    return
+
 
     val hBaseRDD = sparkContext.newAPIHadoopRDD(conf, classOf[TableInputFormat],
 
@@ -60,5 +90,14 @@ object SparkHbaseTest {
       println("rowKey:"+rowKey+" Value:"+value)
 
     }}
+  }
+
+  def deleteHTable(connection: Connection, tn: String): Unit = {
+    val tableName = TableName.valueOf(nameSpace + ":" + tn)
+    val admin = connection.getAdmin
+    if (admin.tableExists(tableName)) {
+      admin.disableTable(tableName)
+      admin.deleteTable(tableName)
+    }
   }
 }

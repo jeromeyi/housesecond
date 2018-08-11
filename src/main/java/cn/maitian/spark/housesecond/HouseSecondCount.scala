@@ -16,6 +16,7 @@ object HouseSecondCount {
         .builder()
         .appName("SparkSql HouseSecondCount")
         //.master("spark://172.16.11.51:7077 ")
+        //.master("spark://master:7077")
         .config("spark.some.config.option", "some-value")
         .getOrCreate()
     //val houseseconddata = sc.textFile("/maitian/HouseSecond/HouseSecond*")

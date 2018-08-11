@@ -105,6 +105,13 @@ class HbaseUtils {
     res.rawCells()
   }
 
+  def getRowResult(conf:Configuration,tableName:String,row:String):Result={
+    //    val table = new HTable(conf,tableName)
+    val  table = ConnectionFactory.createConnection(conf).getTable(TableName.valueOf(tableName))
+    val get = new Get(Bytes.toBytes(row))
+    table.get(get)
+  }
+
   /**
     * @see 删除指定表的指定row数据  
     * @param conf Configuration  
