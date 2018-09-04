@@ -45,10 +45,10 @@ object SparkHbaseTest {
       val columnFamily = Seq("cf")
 
 
-      new HbaseHelper().createHTable(connection,"test",10,columnFamily.toArray)
+      new HbaseHelper().createHTable(connection,tablename,10,columnFamily.toArray)
 
     }
-    val  table = connection.getTable(TableName.valueOf("test"))
+    val  table = connection.getTable(TableName.valueOf(tablename))
     val get = new Get(Bytes.toBytes("fb038c3e_35989"))
     val result: Result  = table.get(get)
    /* val cells=result.rawCells()

@@ -24,7 +24,7 @@ object SparkHbaseInsertTest extends RowKey{
     jobConf.set(TableOutputFormat.OUTPUT_TABLE, "test")
     jobConf.setOutputFormat(classOf[TableOutputFormat])
     //val rdd = sparkContext.makeRDD(Array(1)).flatMap(_ => 0 to 100000)
-    val rdd = sparkContext.makeRDD(Array(1)).flatMap(_ => 10000001 to 100000000)
+    val rdd = sparkContext.makeRDD(Array(1)).flatMap(_ => 1 to 100000000)
     rdd.map(x => {
       //MD5Hash.getMD5AsHex(Bytes.toBytes("之前的rowkey前缀"))
       //var put = new Put(Bytes.toBytes(x.toString))

@@ -2,10 +2,9 @@
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import org.apache.hadoop.hbase.HBaseConfiguration
-import org.apache.hadoop.hbase.client.{ConnectionFactory, HBaseAdmin, Result}
+import org.apache.hadoop.hbase.{HBaseConfiguration, TableName}
+import org.apache.hadoop.hbase.client._
 import org.apache.hadoop.hbase.protobuf.generated.CellProtos.KeyValue
-import org.apache.hadoop.hbase.protobuf.generated.FilterProtos.{FamilyFilter, SingleColumnValueFilter}
 import org.apache.hadoop.hbase.util.Bytes
 
 
@@ -22,9 +21,34 @@ object TestHbase {
     conf.set("hbase.zookeeper.property.clientPort", "2181")*/
     conf.set("hbase.zookeeper.quorum","master,slave1,slave2,slave3,slave4")
     conf.set("hbase.zookeeper.property.clientPort", "2181")
-    val hBaseUtils = new HbaseUtils()
+   val hBaseUtils = new HbaseUtils()
+
     val result: Result  =hBaseUtils.getRowResult(conf,"test","fb038c3e_35989")
     println(Bytes.toString(result.getValue(Bytes.toBytes("cf"),Bytes.toBytes("c1"))))
+
+
+    /*val result1: Result  =hBaseUtils.getRowResult(conf,"test","000186c6_14383064")
+    println(Bytes.toString(result1.getValue(Bytes.toBytes("cf"),Bytes.toBytes("c1"))))*/
+
+   /* val scan = new Scan()
+    scan.setStartRow(Bytes.toBytes("000186c6"))
+    scan.setStopRow(Bytes.toBytes("00019d57"))
+
+    //      val table = new HTable(conf,tableName)
+    val  table = ConnectionFactory.createConnection(conf).getTable(TableName.valueOf("test"))
+    val results: ResultScanner = table.getScanner(scan)
+    try{
+      val it = results.iterator()
+      while (it.hasNext) {
+        val r: Result = it.next()
+
+        println("Found value: "+Bytes.toString(r.getValue("cf".getBytes,"c1".getBytes)))
+        }
+
+    }finally {
+      //确保scanner关闭
+      results.close()
+    }*/
 
     val now1: Date = new Date()
     val dateFormat1: SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")

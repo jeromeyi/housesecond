@@ -37,7 +37,7 @@ class HbaseUtils {
     * @param columnNames List[String] 列族名称的集合  
     */
   def createTable(admin: HBaseAdmin,tName:String,columnNames:List[String] ):Boolean = {
-    if(admin.tableExists(tName))false
+    if(admin.tableExists(tName)) return false
     try
     {val tableDesc = new HTableDescriptor(TableName.valueOf(tName))
     columnNames.foreach(columnName => tableDesc.addFamily(new HColumnDescriptor(columnName)))//添加列

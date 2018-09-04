@@ -4,6 +4,7 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase._
 import org.apache.hadoop.hbase.client.{Connection, ConnectionFactory}
 import org.apache.hadoop.hbase.io.compress.Compression.Algorithm
+import org.apache.hadoop.hbase.regionserver.BloomType
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.hbase.util.RegionSplitter.HexStringSplit
 
@@ -75,7 +76,9 @@ class HbaseHelper {
         columns.foreach(c => {
           val hcd = new HColumnDescriptor(c.getBytes()) //设置列簇
           hcd.setMaxVersions(1)
-          hcd.setCompressionType(Algorithm.GZ) //设定数据存储的压缩类型.默认无压缩(NONE)
+          //hcd.setCompressionType(Algorithm.GZ) //设定数据存储的压缩类型.默认无压缩(NONE)
+          //hcd.setCompressionType(Algorithm) //设定数据存储的压缩类型.默认无压缩(NONE)
+          hcd.setBloomFilterType(BloomType.ROW)
           tableDescriptor.addFamily(hcd)
         })
       }
