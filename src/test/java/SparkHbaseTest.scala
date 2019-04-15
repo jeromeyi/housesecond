@@ -21,7 +21,7 @@ object SparkHbaseTest {
     }
     val sconf = new SparkConf().setMaster(masterUrl).setAppName("SparkHbaseTest")
     val sparkContext = new SparkContext(sconf)
-    val tablename = "test"
+    val tablename = "salecontract"
 
     val conf = HBaseConfiguration.create()
 
@@ -42,12 +42,13 @@ object SparkHbaseTest {
       //val tableDesc = new HTableDescriptor(TableName.valueOf(tablename))
 
       //admin.createTable(tableDesc)
-      val columnFamily = Seq("cf")
+      val columnFamily = Seq("ci")
 
 
-      new HbaseHelper().createHTable(connection,tablename,10,columnFamily.toArray)
+      new HbaseHelper().createHTable(connection,tablename,20,columnFamily.toArray)
 
     }
+    return;
     val  table = connection.getTable(TableName.valueOf(tablename))
     val get = new Get(Bytes.toBytes("fb038c3e_35989"))
     val result: Result  = table.get(get)
